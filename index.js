@@ -8,7 +8,7 @@ app.set('views', path.join( __dirname, 'views'));
 app.set('view engine', 'ejs');
 
 /// Tham số
-const PORT = 8080;
+const PORT = process.env.PORT || 8080;
 
 /////-----------------------------------
 app.get( '/', homePage );
@@ -22,6 +22,9 @@ function loginPage(req, res) {
 	console.log("\n ...", req.query.username, req.query.password);
 	res.render("login");
 }
+
+var exHome = require('./controllers/home');
+app.get( '/ex', exHome);
 
 /*
 	
