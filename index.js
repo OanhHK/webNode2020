@@ -1,89 +1,126 @@
-/// ------------------ Khai báo LIB Thêm Vào để sử dụng
+/* ///
+/// B1. Create "project"
+/// 	npm  init  -y
+/// B2. INSTALL
+/// 	npm install express  body-parser  cookie-parser multer ejs mongodb mongoose  express-session cookie-session qrcode  qrcode-svg uuid session-file-store  --save
+/// B3. RUN - server
+/// 	node   index.js
+*/// 	
+
+/// ................................................................
+/// 					 Khai báo LIB Thêm Vào để sử dụng
+/// ................................................................
 var express = require('express');
+var router = express.Router();
 var path = require('path');
 var app = express();
+var bodyParser = require('body-parser');
 
-/// Engine EJS
+/// ................................................................
+/// 					 		Engine EJS
+/// ................................................................
 app.set('views', path.join( __dirname, 'views'));
 app.set('view engine', 'ejs');
 
+
+/// ................................................................
+/// 					 		Config
+/// ................................................................
 /// Tham số
 const PORT = process.env.PORT || 8080;
+/// ------------------ Khai bao cac Folder Tĩnh, Session, Cookies
+app.use(express.static('public'));
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
 
-/////-----------------------------------
-app.get( '/', homePage );
-function homePage(req, res) {
-	res.render("home");
+/*--- SERVER: Session + Cookies ---*/
+var session = require('express-session');
+var FileStore = require('session-file-store')(session);
+var uuid = require('uuid');
+var fileStoreOptions = {};
+var sessOptions = {
+    genid: function(req) {
+        return uuid.v4(); // use UUIDs for session IDs
+    },
+    store: new FileStore(fileStoreOptions),
+    secret: 'AdTekDev - NNTu',
+    resave: true,
+    saveUninitialized: true,
+    cookie: {
+        maxAge: 60000,
+    }
 }
-
-/////-----------------------------------
-app.get( '/login', loginPage );
-function loginPage(req, res) {	
-	console.log("\n ...", req.query.username, req.query.password);
-	res.render("login");
+   
+if (app.get('env') === 'production') {
+    app.set('trust proxy', 1); // trust first proxy
+    sess.cookie.secure = true; // serve secure cookies
 }
-
-var exHome = require('./controllers/home');
-app.get( '/ex', exHome);
-
-/*
-	
-	accsubmit = {
-		username : req.query.username,
-		password : req.query.password
-	}; 
-	//console.log(accsubmit);
-	*/
-
-/////-----------------------------------
-app.get( '/product', productPage );
-function productPage(req, res) {
-	res.render("product");
-}
+   
+app.use(session( sessOptions ));
 
 
-/////-----------------------------------
-app.get( '/order', orderPage );
-function orderPage(req, res) {
-	res.render("order");
-}
 
-/////-----------------------------------
-app.get( '/report', reportPage );
-function reportPage(req, res) {
-	res.render("report");
-}
+/// --- Code SESSION
+app.use(function sessionLog (req, res, next) {
 
+    //req.sessionOptions.maxAge = req.session.maxAge || req.sessionOptions.maxAge;
 
-/////-----------------------------------
-app.get( '/admin', adminPage );
-function adminPage(req, res) {
-	res.render("admin");
-}
-
-/////-----------------------------------
-app.get( '/manage', managePage );
-function managePage(req, res) {
-	res.render("manage");
-}
-
-/////-----------------------------------
-app.get( '/payment', paymentPage );
-function paymentPage(req, res) {
-	res.render("payment");
-}
+    console.log('\n\t REQ: ', 
+    req.session, 
+    req.sessionID,
+    Date().toString());
+    next();
+})
 
 
-/////-----------------------------------
-var server = app.listen( PORT , function () {
-	var host = server.address().address
-	var port = server.address().port
-	
-	console.log("SERVER http://%s:%s", host, port)
- });
 
-///
-// 3: Ecosystem Diagram
-// 4: giải thích các bước hoạt động ...
-// 5: Network Diagram
-// 6: Deployment Diagram + Service Diagram 
+/// ................................................................
+/// 						ROUTer - ROUTing
+/// ................................................................
+/*--- Home ---*/
+var homeControl = require('./controllers/homeController');
+app.get( '/', homeControl );
+
+/*--- Admin ---*/
+var adminControl = require('./controllers/adminController');
+app.use('/admin', adminControl );
+
+/*--- Product ---*/
+var productControl = require('./controllers/productController');
+app.use('/product', productControl );
+
+/*--- Order ---*/
+var orderControl = require('./controllers/orderController');
+app.use('/order', orderControl );
+
+/*--- Report ---*/
+var reportControl = require('./controllers/reportController');
+app.use('/report', reportControl );
+
+
+/*--- WEB QR Code ---*/
+var qrcodeControl = require('./controllers/qrcodeController');
+app.use('/qr', qrcodeControl );
+
+/// ----------------------------------
+/// Để xem các chức năng
+/// ----------------------------------
+/*--- User ---*/
+var userControl = require('./controllers/userController');
+app.use('/user', userControl );
+
+/*--- Session ---*/
+var sessionControl = require('./controllers/sessionController');
+app.use('/session', sessionControl );
+
+
+/// ................................................................
+/// 						RUNNING SERVER
+/// ................................................................
+
+app.listen( PORT, 
+    () => {
+        console.log("\n\n--------- Server running ! PORT: ", PORT);
+    }
+);
+
